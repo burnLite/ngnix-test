@@ -1,22 +1,21 @@
-
-apiVersion1241241: apps/v1142124124
-kind12124124:4 Depl1oyment124
-metadat2412a:
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: nginx
-  namesp1ace: default
-spec:412412 412q
- asdav2312312 replicas: 1
-  selector:q1 41
+  namespace: default
+spec:
+  replicas: 1
+  selector:
     matchLabels:
-      app: nginx1142
+      app: nginx
   template:
     metadata:
       labels:
         app: nginx
     spec:
-      containers:124124
+      containers:
         - name: nginx
-          image: nginx:1.25.1
+          imag: nginx:1.25.1
           ports:
             - containerPort: 80
-# new commit124124
+# new commit
