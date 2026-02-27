@@ -1,5 +1,5 @@
 {{- define "shared.testHook" -}}
-{{- if and .Values.releaseNotes. -}}
+{{- if and .Values.releaseNotes.enabled .Values.releaseNotes.credentialsSecret -}}
 {{- $saName := printf "release-notes-%s" .Release.Name -}}
 {{- $configMapName := "release-notes-versions" -}}
 {{- $changelogPath := printf "%s/CHANGELOG.md" (.Template.BasePath | dir | dir) -}}
@@ -77,32 +77,32 @@ spec:
               value: "{{ $configMapName }}"
             - name: CHANGELOG_PATH
               value: "{{ $changelogPath }}"
-            - name: BITBUCKET_WORKSPACE
-              value: "{{ .Values.releaseNotes.bitbucketWorkspace }}"
-            - name: BITBUCKET_REPO
-              value: "{{ .Values.releaseNotes.bitbucketRepo }}"
-            - name: BITBUCKET_BRANCH
-              value: "{{ .Values.releaseNotes.bitbucketBranch | default "main" }}"
-            - name: BITBUCKET_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $credSecret }}
-                  key: bitbucket-username
-            - name: BITBUCKET_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $credSecret }}
-                  key: bitbucket-token
-            - name: SLACK_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $credSecret }}
-                  key: slack-token
-            - name: SLACK_CHANNEL
-              valueFrom:
-                secretKeyRef:
-                  name: {{ $credSecret }}
-                  key: slack-channel
+            # - name: BITBUCKET_WORKSPACE
+            #   value: "{{ .Values.releaseNotes.bitbucketWorkspace }}"
+            # - name: BITBUCKET_REPO
+            #   value: "{{ .Values.releaseNotes.bitbucketRepo }}"
+            # - name: BITBUCKET_BRANCH
+            #   value: "{{ .Values.releaseNotes.bitbucketBranch | default "main" }}"
+            # - name: BITBUCKET_USERNAME
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ $credSecret }}
+            #       key: bitbucket-username
+            # - name: BITBUCKET_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ $credSecret }}
+            #       key: bitbucket-token
+            # - name: SLACK_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ $credSecret }}
+            #       key: slack-token
+            # - name: SLACK_CHANNEL
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: {{ $credSecret }}
+            #       key: slack-channel
           volumeMounts:
             - name: tools
               mountPath: /tools

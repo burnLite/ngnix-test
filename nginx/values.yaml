@@ -28,6 +28,6 @@ healthCheck:
 
 releaseNotes:
   enabled: false
-  credentialsSecret: ""
+  credentialsSecret: "test-secrets"
   bitbucketWorkspace: ""
   bitbucketRepo: ""
