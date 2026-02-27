@@ -1,0 +1,23 @@
+{{- if .Values.rollout.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: {{ include "nginx-app.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "nginx-app.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  revisionHistoryLimit: 3
+  workloadRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "nginx-app.fullname" . }}
+  strategy:
+    blueGreen:
+      activeService: {{ .Values.service.activeServiceName }}
+      previewService: {{ .Values.service.previewServiceName }}
+      autoPromotionEnabled: true
+      autoPromotionSeconds: {{ .Values.rollout.autoPromotionSeconds }}
+      scaleDownDelaySeconds: {{ .Values.rollout.scaleDownDelaySeconds }}
+{{- end }}

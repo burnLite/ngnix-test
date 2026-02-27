@@ -1,0 +1,33 @@
+replicaCount: 1
+
+image:
+  repository: nginx
+  tag: "1.25.2"
+  pullPolicy: IfNotPresent
+
+service:
+  activeServiceName: nginx-active
+  previewServiceName: nginx-preview
+
+rollout:
+  enabled: true
+  strategy: blueGreen
+  autoPromotionSeconds: 60
+  scaleDownDelaySeconds: 30
+
+healthCheck:
+  enabled: true
+  path: /healthz
+  port: 80
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+releaseNotes:
+  enabled: false
+  credentialsSecret: ""
+  bitbucketWorkspace: ""
+  bitbucketRepo: ""
