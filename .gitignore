@@ -1,0 +1,45 @@
+# Helm
+Chart.lock
+charts/
+nginx/charts/
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
+.DS_Store
+.project
+
+# Kubernetes & Local Dev
+kubeconfig
+*.kubeconfig
+.kube/
+minikube/
+
+# Environment files
+.env
+.env.local
+.envrc
+
+# Build artifacts
+dist/
+build/
+output/
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.orig
+
+# OS
+Thumbs.db
+.DS_Store
