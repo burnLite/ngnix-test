@@ -53,9 +53,28 @@ spec:
     spec:
       serviceAccountName: {{ $saName }}
       restartPolicy: Never
+      volumes:
+        - name: tools
+          emptyDir: {}
+      initContainers:
+        - name: install-tools
+          image: alpine:3.19
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
+          command:
+            - sh
+            - -c
+            - |
+              apk add --no-cache curl jq kubectl
+              cp /usr/bin/curl /tools/curl
+              cp /usr/bin/jq /tools/jq
       containers:
         - name: release-notes
           image: bitnami/kubectl:latest
+          volumeMounts:
+            - name: tools
+              mountPath: /tools
           env:
             - name: NEW_VERSION
               value: "{{ .Chart.AppVersion }}"
@@ -74,6 +93,7 @@ spec:
             - sh
             - -c
             - |
+              export PATH="/tools:$PATH"
               set -e
 
               if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+'; then
@@ -104,46 +124,56 @@ spec:
                 exit 0
               fi
 
+              RELEASE_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+              
+              PAYLOAD=$(jq -n \
+                --arg channel "release-notes" \
+                --arg text "New release deployed" \
+                --arg app_name "$APP_NAME" \
+                --arg new_version "$NEW_VERSION" \
+                --arg release_date "$RELEASE_DATE" \
+                --arg namespace "{{ .Release.Namespace }}" \
+                '{
+                  channel: $channel,
+                  text: $text,
+                  attachments: [
+                    {
+                      fallback: "Release notification for \($app_name) v\($new_version)",
+                      color: "#36a64f",
+                      pretext: "🚀 A new release has been deployed",
+                      title: $app_name,
+                      fields: [
+                        {
+                          title: "Application",
+                          value: $app_name,
+                          short: true
+                        },
+                        {
+                          title: "Version",
+                          value: $new_version,
+                          short: true
+                        },
+                        {
+                          title: "Release Date",
+                          value: $release_date,
+                          short: true
+                        },
+                        {
+                          title: "Namespace",
+                          value: $namespace,
+                          short: true
+                        }
+                      ],
+                      footer: "ArgoCD Release Bot",
+                      footer_icon: "https://argoproj.github.io/argo-cd/assets/logo.png"
+                    }
+                  ]
+                }')
+
               curl --location 'https://slack.com/api/chat.postMessage' \
-              --header 'Content-Type: application/json' \
-              --header 'Authorization: Bearer $SLACK_TOKEN' \
-              --data '{
-                "channel": "release-notes",
-                "text": "New release deployed",
-                "attachments": [
-                  {
-                    "fallback": "Release notification for $APP_NAME v$NEW_VERSION",
-                    "color": "#36a64f",
-                    "pretext": "🚀 A new release has been deployed",
-                    "title": "$APP_NAME",
-                    "fields": [
-                      {
-                        "title": "Application",
-                        "value": "$APP_NAME",
-                        "short": true
-                      },
-                      {
-                        "title": "Version",
-                        "value": "$NEW_VERSION",
-                        "short": true
-                      },
-                      {
-                        "title": "Release Date",
-                        "value": "{{ now | dateFormat "2006-01-02 15:04" }}",
-                        "short": true
-                      },
-                      {
-                        "title": "Namespace",
-                        "value": "{{ .Release.Namespace }}",
-                        "short": true
-                      }
-                    ],
-                    "footer": "ArgoCD Release Bot",
-                    "footer_icon": "https://argoproj.github.io/argo-cd/assets/logo.png"
-                  }
-                ]
-              }
-              '
+                --header 'Content-Type: application/json' \
+                --header "Authorization: Bearer $SLACK_TOKEN" \
+                --data "$PAYLOAD"
 
               echo "==> $APP_NAME: $OLD_VERSION -> $NEW_VERSION"
               kubectl patch configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
