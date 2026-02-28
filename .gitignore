@@ -1,8 +1,3 @@
-# Helm
-Chart.lock
-charts/
-nginx/charts/
-
 # IDE & Editor
 .vscode/
 .idea/
