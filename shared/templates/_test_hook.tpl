@@ -66,7 +66,7 @@ spec:
             - sh
             - -c
             - |
-              apk add --no-cache curl jq kubectl
+              apk add --no-cache curl jq
               cp /usr/bin/curl /tools/curl
               cp /usr/bin/jq /tools/jq
       containers:
