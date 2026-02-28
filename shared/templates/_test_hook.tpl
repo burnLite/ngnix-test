@@ -46,6 +46,7 @@ metadata:
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+    argocd.argoproj.io/sync-wave: "1"
 spec:
   ttlSecondsAfterFinished: 86400
   template:
@@ -64,6 +65,11 @@ spec:
               value: "{{ $configMapName }}"
             - name: TARGET_NS
               value: "{{ $ns }}"
+            - name: SLACK_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.releaseNotes.credentialsSecretFile }}
+                  key: slack-token
           command:
             - sh
             - -c
@@ -97,6 +103,47 @@ spec:
                 echo "==> No version change ($NEW_VERSION), skipping."
                 exit 0
               fi
+
+              curl --location 'https://slack.com/api/chat.postMessage' \
+              --header 'Content-Type: application/json' \
+              --header 'Authorization: Bearer $SLACK_TOKEN' \
+              --data '{
+                "channel": "release-notes",
+                "text": "New release deployed",
+                "attachments": [
+                  {
+                    "fallback": "Release notification for $APP_NAME v$NEW_VERSION",
+                    "color": "#36a64f",
+                    "pretext": "🚀 A new release has been deployed",
+                    "title": "$APP_NAME",
+                    "fields": [
+                      {
+                        "title": "Application",
+                        "value": "$APP_NAME",
+                        "short": true
+                      },
+                      {
+                        "title": "Version",
+                        "value": "$NEW_VERSION",
+                        "short": true
+                      },
+                      {
+                        "title": "Release Date",
+                        "value": "{{ now | dateFormat "2006-01-02 15:04" }}",
+                        "short": true
+                      },
+                      {
+                        "title": "Namespace",
+                        "value": "{{ .Release.Namespace }}",
+                        "short": true
+                      }
+                    ],
+                    "footer": "ArgoCD Release Bot",
+                    "footer_icon": "https://argoproj.github.io/argo-cd/assets/logo.png"
+                  }
+                ]
+              }
+              '
 
               echo "==> $APP_NAME: $OLD_VERSION -> $NEW_VERSION"
               kubectl patch configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
