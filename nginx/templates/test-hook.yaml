@@ -1,1 +1,1 @@
-{{- include "shared.testHook" . }}
+{{- include "shared-helpers.testHook" . }}

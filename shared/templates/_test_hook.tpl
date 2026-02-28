@@ -1,21 +1,20 @@
-{{- define "shared.testHook" -}}
+{{- define "shared-helpers.testHook" -}}
 {{- if and .Values.releaseNotes.enabled .Values.releaseNotes.credentialsSecret -}}
 {{- $saName := printf "release-notes-%s" .Release.Name -}}
 {{- $configMapName := "release-notes-versions" -}}
-{{- $changelogPath := printf "%s/CHANGELOG.md" (.Template.BasePath | dir | dir) -}}
 {{- $credSecret := .Values.releaseNotes.credentialsSecret -}}
 
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ $saName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: argocd
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: {{ $saName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: argocd
 rules:
   - apiGroups: [""]
     resources: ["configmaps"]
@@ -24,16 +23,19 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["create"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: {{ $saName }}
-  namespace: {{ .Release.Namespace }}
+  namespace: argocd
 subjects:
   - kind: ServiceAccount
     name: {{ $saName }}
-    namespace: {{ .Release.Namespace }}
+    namespace: argocd
 roleRef:
   kind: Role
   apiGroup: rbac.authorization.k8s.io
@@ -43,7 +45,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: release-notes-postsync-{{ .Release.Name }}
-  namespace: {{ .Release.Namespace }}
+  namespace: argocd
   annotations:
     argocd.argoproj.io/hook: PostSync
     argocd.argoproj.io/hook-delete-policy: HookSucceeded
@@ -52,19 +54,6 @@ spec:
     spec:
       serviceAccountName: {{ $saName }}
       restartPolicy: Never
-      initContainers:
-        - name: install-tools
-          image: alpine:3.19
-          command:
-            - sh
-            - -c
-            - |
-              apk add --no-cache curl jq
-              cp /usr/bin/curl /tools/curl
-              cp /usr/bin/jq /tools/jq
-          volumeMounts:
-            - name: tools
-              mountPath: /tools
       containers:
         - name: release-notes
           image: bitnami/kubectl:latest
@@ -75,8 +64,36 @@ spec:
               value: "{{ .Release.Name }}"
             - name: CONFIGMAP_NAME
               value: "{{ $configMapName }}"
-            - name: CHANGELOG_PATH
-              value: "{{ $changelogPath }}"
+            - name: TARGET_NS
+              value: "{{ .Release.Namespace }}"
+          command:
+            - sh
+            - -c
+            - |
+              set -e
+              if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+'; then
+                echo "Not a versioned release ($NEW_VERSION), skipping." && exit 0
+              fi
+              if ! kubectl get configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" > /dev/null 2>&1; then
+                echo "==> ConfigMap not found, creating..."
+                kubectl create configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
+                  --from-literal="${APP_NAME}=${NEW_VERSION}" || true
+                echo "==> First deploy of $APP_NAME at $NEW_VERSION"
+                exit 0
+              fi
+              OLD_VERSION=$(kubectl get configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
+                -o jsonpath="{.data.${APP_NAME}}" 2>/dev/null || echo "")
+              if [ -z "$OLD_VERSION" ]; then
+                echo "==> No previous version for $APP_NAME, recording $NEW_VERSION"
+                kubectl patch configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
+                  --type merge -p "{\"data\":{\"${APP_NAME}\":\"${NEW_VERSION}\"}}"
+                exit 0
+              fi
+              [ "$OLD_VERSION" = "$NEW_VERSION" ] && echo "==> No version change" && exit 0
+              echo "==> $APP_NAME: $OLD_VERSION -> $NEW_VERSION"
+              kubectl patch configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
+                --type merge -p "{\"data\":{\"${APP_NAME}\":\"${NEW_VERSION}\"}}"
+              echo "==> Done."
             # - name: BITBUCKET_WORKSPACE
             #   value: "{{ .Values.releaseNotes.bitbucketWorkspace }}"
             # - name: BITBUCKET_REPO
