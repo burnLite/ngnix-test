@@ -108,19 +108,17 @@ spec:
 
               PAYLOAD=$(jq -n \
                 --arg channel "release-notes" \
-                --arg text "New release deployed" \
                 --arg app "$APP_NAME" \
                 --arg ver "$NEW_VERSION" \
                 --arg date "$RELEASE_DATE" \
                 --arg ns "$TARGET_NS" \
                 '{
                   channel: $channel,
-                  text: $text,
+                  text: ("New release for " + ($app | ascii_upcase) + " deployed"),
                   attachments: [{
-                    fallback: ("Release notification for " + $app + " v" + $ver),
+                    fallback: ("Release notification for " + ($app | ascii_upcase) + " v" + $ver),
                     color: "#36a64f",
                     pretext: "🚀 A new release has been deployed",
-                    title: $app,
                     fields: [
                       { title: "Application",  value: $app,  short: true },
                       { title: "Version",      value: $ver,  short: true },

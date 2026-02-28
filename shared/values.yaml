@@ -1,10 +1,32 @@
-# Shared helpers default values
-nameOverride: ""
-fullnameOverride: ""
+replicaCount: 1
+
+image:
+  repository: ""
+  pullPolicy: ""
+
+service:
+  activeServiceName: ""
+  previewServiceName: ""
+
+rollout:
+  enabled: false
+  strategy: ""
+  autoPromotionSeconds: 30
+  scaleDownDelaySeconds: 10
+
+healthCheck:
+  enabled: true
+  path: /
+  port: 0
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
 
 releaseNotes:
   enabled: false
-  credentialsSecret: ""
-
-fullnameOverride: ""
-nameOverride: ""
+  credentialsSecret: "r"
+  bitbucketWorkspace: ""
+  bitbucketRepo: ""
