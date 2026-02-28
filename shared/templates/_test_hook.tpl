@@ -53,28 +53,9 @@ spec:
     spec:
       serviceAccountName: {{ $saName }}
       restartPolicy: Never
-      volumes:
-        - name: tools
-          emptyDir: {}
-      initContainers:
-        - name: install-tools
-          image: alpine:3.19
-          volumeMounts:
-            - name: tools
-              mountPath: /tools
-          command:
-            - sh
-            - -c
-            - |
-              apk add --no-cache curl jq
-              cp /usr/bin/curl /tools/curl
-              cp /usr/bin/jq /tools/jq
       containers:
         - name: release-notes
-          image: bitnami/kubectl:latest
-          volumeMounts:
-            - name: tools
-              mountPath: /tools
+          image: alpine/k8s:1.29.2
           env:
             - name: NEW_VERSION
               value: "{{ .Chart.AppVersion }}"
@@ -93,7 +74,6 @@ spec:
             - sh
             - -c
             - |
-              export PATH="/tools:$PATH"
               set -e
 
               if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+'; then
@@ -124,56 +104,45 @@ spec:
                 exit 0
               fi
 
-              RELEASE_DATE=$(date '+%Y-%m-%d %H:%M:%S')
-              
+              RELEASE_DATE=$(date -u '+%Y-%m-%d %H:%M UTC')
+
               PAYLOAD=$(jq -n \
                 --arg channel "release-notes" \
                 --arg text "New release deployed" \
-                --arg app_name "$APP_NAME" \
-                --arg new_version "$NEW_VERSION" \
-                --arg release_date "$RELEASE_DATE" \
-                --arg namespace "{{ .Release.Namespace }}" \
+                --arg app "$APP_NAME" \
+                --arg ver "$NEW_VERSION" \
+                --arg date "$RELEASE_DATE" \
+                --arg ns "$TARGET_NS" \
                 '{
                   channel: $channel,
                   text: $text,
-                  attachments: [
-                    {
-                      fallback: "Release notification for \($app_name) v\($new_version)",
-                      color: "#36a64f",
-                      pretext: "🚀 A new release has been deployed",
-                      title: $app_name,
-                      fields: [
-                        {
-                          title: "Application",
-                          value: $app_name,
-                          short: true
-                        },
-                        {
-                          title: "Version",
-                          value: $new_version,
-                          short: true
-                        },
-                        {
-                          title: "Release Date",
-                          value: $release_date,
-                          short: true
-                        },
-                        {
-                          title: "Namespace",
-                          value: $namespace,
-                          short: true
-                        }
-                      ],
-                      footer: "ArgoCD Release Bot",
-                      footer_icon: "https://argoproj.github.io/argo-cd/assets/logo.png"
-                    }
-                  ]
+                  attachments: [{
+                    fallback: ("Release notification for " + $app + " v" + $ver),
+                    color: "#36a64f",
+                    pretext: "🚀 A new release has been deployed",
+                    title: $app,
+                    fields: [
+                      { title: "Application",  value: $app,  short: true },
+                      { title: "Version",      value: $ver,  short: true },
+                      { title: "Release Date", value: $date, short: true },
+                      { title: "Namespace",    value: $ns,   short: true }
+                    ],
+                    footer: "ArgoCD Release Bot",
+                    footer_icon: "https://argoproj.github.io/argo-cd/assets/logo.png"
+                  }]
                 }')
 
-              curl --location 'https://slack.com/api/chat.postMessage' \
-                --header 'Content-Type: application/json' \
+              echo "==> Sending Slack notification..."
+              SLACK_RESPONSE=$(curl -sf --location 'https://slack.com/api/chat.postMessage' \
+                --header 'Content-Type: application/json; charset=utf-8' \
                 --header "Authorization: Bearer $SLACK_TOKEN" \
-                --data "$PAYLOAD"
+                --data "$PAYLOAD")
+              echo "Slack response: $SLACK_RESPONSE"
+
+              if ! echo "$SLACK_RESPONSE" | jq -e '.ok == true' > /dev/null; then
+                echo "==> Slack API error: $(echo $SLACK_RESPONSE | jq -r '.error')"
+                exit 1
+              fi
 
               echo "==> $APP_NAME: $OLD_VERSION -> $NEW_VERSION"
               kubectl patch configmap "$CONFIGMAP_NAME" -n "$TARGET_NS" \
