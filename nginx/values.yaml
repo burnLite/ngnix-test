@@ -26,7 +26,7 @@ healthCheck:
     periodSeconds: 10
 
 releaseNotes:
-  enabled: false
+  enabled: true
   credentialsSecret: "test-secrets"
   bitbucketWorkspace: ""
   bitbucketRepo: ""
