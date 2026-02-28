@@ -1,0 +1,4 @@
+# Shared helpers default values
+releaseNotes:
+  enabled: false
+  credentialsSecret: ""
