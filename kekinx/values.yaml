@@ -5,8 +5,8 @@ image:
   pullPolicy: IfNotPresent
 
 service:
-  activeServiceName: nginx-active
-  previewServiceName: nginx-preview
+  activeServiceName: kekinx-active
+  previewServiceName: kekinx-preview
 
 rollout:
   enabled: true
@@ -30,5 +30,3 @@ releaseNotes:
   credentialsSecret: "release-notes-credentials"
   bitbucketWorkspace: ""
   bitbucketRepo: ""
-
-nameOverride: ""

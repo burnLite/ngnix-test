@@ -1,4 +1,10 @@
 # Shared helpers default values
+nameOverride: ""
+fullnameOverride: ""
+
 releaseNotes:
   enabled: false
   credentialsSecret: ""
+
+fullnameOverride: ""
+nameOverride: ""
