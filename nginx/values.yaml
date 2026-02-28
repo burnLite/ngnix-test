@@ -27,6 +27,6 @@ healthCheck:
 
 releaseNotes:
   enabled: true
-  credentialsSecretFile: "release-notes-credentials"
+  credentialsSecret: "release-notes-credentials"
   bitbucketWorkspace: ""
   bitbucketRepo: ""

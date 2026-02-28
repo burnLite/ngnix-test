@@ -87,7 +87,7 @@ spec:
             - name: SLACK_TOKEN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.releaseNotes.credentialsSecretFile }}
+                  name: {{ .Values.releaseNotes.credentialsSecret }}
                   key: slack-token
           command:
             - sh
