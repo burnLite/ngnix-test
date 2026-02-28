@@ -11,8 +11,8 @@ service:
 rollout:
   enabled: true
   strategy: blueGreen
-  autoPromotionSeconds: 60
-  scaleDownDelaySeconds: 30
+  autoPromotionSeconds: 30
+  scaleDownDelaySeconds: 10
 
 healthCheck:
   enabled: true
