@@ -6,7 +6,7 @@ kind create cluster --name argocd-demo
 
 # 2. Install ArgoCD in the cluster
 kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl apply -n argocd --server-side --force-conflicts -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
 # 3. Install Argo Rollouts in the cluster
 kubectl create namespace argo-rollouts
