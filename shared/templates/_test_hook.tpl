@@ -55,7 +55,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: release-notes
-          image: alpine/3.19
+          image: alpine:3.19
           env:
             - name: NEW_VERSION
               value: "{{ .Chart.AppVersion }}"
