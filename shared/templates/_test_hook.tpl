@@ -55,7 +55,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: release-notes
-          image: alpine/k8s:1.29.2
+          image: alpine/3.19
           env:
             - name: NEW_VERSION
               value: "{{ .Chart.AppVersion }}"
@@ -75,6 +75,8 @@ spec:
             - -c
             - |
               set -e
+              apk update
+              apk add --no-cache curl jq kubectl
 
               if ! echo "$NEW_VERSION" | grep -qE '^[0-9]+\.[0-9]+'; then
                 echo "Not a versioned release ($NEW_VERSION), skipping."
