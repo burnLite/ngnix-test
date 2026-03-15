@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: purple0kot/k8s-nestjs
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 # This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
 imagePullSecrets: []
