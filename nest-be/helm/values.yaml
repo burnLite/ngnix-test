@@ -14,7 +14,7 @@ fullnameOverride: ""
 serviceAccount:
   create: true
   automount: true
-  annotations: 
+  annotations: {}
     # eks.amazonaws.com/role-arn: arn:aws:iam::<ID:role/MskRole
   name: ""
 
