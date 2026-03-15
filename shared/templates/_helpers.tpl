@@ -48,3 +48,12 @@ Create the name of the chart to use
 {{- define "shared-helpers.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
+
+
+{{- define "shared-helpers.serviceAccountName" -}}
+{{- if .Values.serviceAccount.create }}
+{{- include "shared-helpers.fullname" . }}
+{{- else }}
+{{- .Values.serviceAccount.name | default "default" }}
+{{- end }}
+{{- end }}
