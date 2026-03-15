@@ -10,7 +10,12 @@ export class KafkaCService implements OnModuleInit, OnModuleDestroy {
     try {
       this.kafka = new Kafka({
         clientId: 'k8s-nestjs',
-        brokers: process.env.KAFKA_BROKERS?.split(',')
+        brokers: process.env.KAFKA_BROKERS?.split(','),
+				ssl: process.env.KAFKA_SSL === 'true',
+				sasl: {
+					mechanism: "aws",
+				}
+        },
       });
 
       this.producer = this.kafka.producer();
