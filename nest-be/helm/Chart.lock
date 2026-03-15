@@ -1,0 +1,6 @@
+dependencies:
+- name: shared-helpers
+  repository: file://../../shared
+  version: 1.0.0
+digest: sha256:58f088c44d879f63282cd1c28cd2798f9b2cef0d18a26e4f245818c125ea820a
+generated: "2026-03-15T21:21:26.210989Z"
