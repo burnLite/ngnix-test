@@ -13,3 +13,5 @@ metadata:
   {{- end }}
 automountServiceAccountToken: {{ .Values.serviceAccount.automount }}
 {{- end }}
+
+{{- end }}
