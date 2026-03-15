@@ -7,13 +7,17 @@ export class KafkaCService implements OnModuleInit, OnModuleDestroy {
   private producer: Producer;
 
   async onModuleInit() {
-    this.kafka = new Kafka({
-      clientId: 'k8s-nestjs',
-      brokers: process.env.KAFKA_BROKERS?.split(','),
-    });
+    try {
+      this.kafka = new Kafka({
+        clientId: 'k8s-nestjs',
+        brokers: process.env.KAFKA_BROKERS?.split(','),
+      });
 
-    this.producer = this.kafka.producer();
-    await this.producer.connect();
+      this.producer = this.kafka.producer();
+      await this.producer.connect();
+    } catch (error) {
+      console.error('Failed to connect to Kafka:', error);
+    }
   }
 
   async onModuleDestroy() {
