@@ -65,7 +65,7 @@ rollout:
 healthCheck:
   enabled: true
   path: /
-  port: 0
+  port: 80
   liveness:
     initialDelaySeconds: 15
     periodSeconds: 20
