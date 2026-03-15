@@ -55,6 +55,25 @@ env:
   - name: KAFKA_TOPIC
     value: "messages"
 
+rollout:
+  enabled: false
+  strategy: ""
+  autoPromotionSeconds: 30
+  scaleDownDelaySeconds: 10
+
+
+healthCheck:
+  enabled: true
+  path: /
+  port: 0
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readiness:
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+
 
 # This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
 ingress:
@@ -74,11 +93,6 @@ ingress:
     #     - chart-example.local
 
 
-rollout:
-  enabled: false
-  strategy: ""
-  autoPromotionSeconds: 30
-  scaleDownDelaySeconds: 10
 
 # -- Expose the service via gateway-api HTTPRoute
 # Requires Gateway API resources and suitable controller installed within the cluster
@@ -140,7 +154,7 @@ readinessProbe:
 autoscaling:
   enabled: false
   minReplicas: 1
-  maxReplicas: 100
+  maxReplicas: 1
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 

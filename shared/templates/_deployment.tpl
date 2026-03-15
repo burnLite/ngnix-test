@@ -15,14 +15,14 @@ spec:
       labels:
         {{- include "shared-helpers.selectorLabels" . | nindent 8 }}
     spec:
-			serviceAccountName: {{ include "shared-helpers.serviceAccountName" . }}
+      serviceAccountName: {{ include "shared-helpers.serviceAccountName" . }}
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.healthCheck.port }}
-					{{- if .Values.env }}
+          {{- if .Values.env }}
           env:
             {{- toYaml .Values.env | nindent 12 }}
           {{- end }}
