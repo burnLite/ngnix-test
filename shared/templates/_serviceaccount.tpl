@@ -1,4 +1,4 @@
-{{- define "shared-helpers.serviceAccount" -}}
+{{- define "shared-helpers.servicesaccount" -}}
 
 {{- if .Values.serviceAccount.create -}}
 apiVersion: v1
